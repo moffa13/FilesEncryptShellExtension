@@ -1,0 +1,8 @@
+#pragma once
+
+#include <initguid.h>
+
+// {17251473-5926-4E28-9680-BD0BC8315434}
+static const GUID FilesEncryptShellExtensionGUID =
+{ 0x17251473, 0x5926, 0x4e28,{ 0x96, 0x80, 0xbd, 0xb, 0xc8, 0x31, 0x54, 0x34 } };
+
