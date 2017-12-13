@@ -21,9 +21,21 @@
     <ClInclude Include="GUID.h">
       <Filter>Fichiers sources</Filter>
     </ClInclude>
+    <ClInclude Include="FilesEncryptClassFactory.h">
+      <Filter>Fichiers sources</Filter>
+    </ClInclude>
+    <ClInclude Include="FilesEncryptContextMenuHandler.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FilesEncryptShellExtension.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="FilesEncryptClassFactory.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="FilesEncryptContextMenuHandler.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>

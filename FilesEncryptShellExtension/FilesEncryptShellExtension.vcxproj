@@ -146,9 +146,13 @@
     <None Include="deffile" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FilesEncryptClassFactory.h" />
+    <ClInclude Include="FilesEncryptContextMenuHandler.h" />
     <ClInclude Include="GUID.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FilesEncryptClassFactory.cpp" />
+    <ClCompile Include="FilesEncryptContextMenuHandler.cpp" />
     <ClCompile Include="FilesEncryptShellExtension.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

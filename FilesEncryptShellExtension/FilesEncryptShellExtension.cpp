@@ -2,13 +2,15 @@
 #include <ShlObj.h>
 #include <string>
 #include <sstream>
+#include "FilesEncryptClassFactory.h"
 
 #include "GUID.h"
 
 #define ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_NO_CLOSE_REG(x) if(x != ERROR_SUCCESS) {return E_UNEXPECTED;}
 #define ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_CLOSE_REG(x) if(x != ERROR_SUCCESS) {RegCloseKey(hKey); return E_UNEXPECTED;}
 
-static HANDLE hInstance;
+static HANDLE g_hInstance;
+UINT g_dllCount = 0;
 static const std::wstring dllName = L"FilesEncrypt";
 
 BOOL WINAPI DllMain(
@@ -19,7 +21,7 @@ BOOL WINAPI DllMain(
 
 	switch (fdwReason) {
 		case DLL_PROCESS_ATTACH:
-			hInstance = hinstDLL;
+			g_hInstance = hinstDLL;
 			break;
 	}
 
@@ -28,7 +30,7 @@ BOOL WINAPI DllMain(
 
 std::wstring GetDllPath() {
 	wchar_t filename[MAX_PATH];
-	GetModuleFileName((HMODULE)hInstance, filename, MAX_PATH);
+	GetModuleFileName((HMODULE)g_hInstance, filename, MAX_PATH);
 	return std::wstring(filename);
 }
 
@@ -107,7 +109,7 @@ HRESULT WINAPI DllUnregisterServer() {
 }
 
 HRESULT WINAPI DllCanUnloadNow() {
-	return E_NOTIMPL;
+	return g_dllCount > 0 ? S_FALSE : S_OK;
 }
 
 HRESULT WINAPI DllGetClassObject(
@@ -115,5 +117,18 @@ HRESULT WINAPI DllGetClassObject(
 	REFIID   riid,
 	LPVOID   *ppv
 ) {
-	return E_NOTIMPL;
+	if (!ppv) return E_INVALIDARG;
+	*ppv = NULL;
+
+	if (!IsEqualCLSID(rclsid, FilesEncryptShellExtensionGUID)) return CLASS_E_CLASSNOTAVAILABLE;
+
+	HRESULT hr = E_UNEXPECTED;
+
+	FilesEncryptClassFactory *pFactory = new FilesEncryptClassFactory;
+	if (pFactory) {
+		hr = pFactory->QueryInterface(riid, ppv);
+		pFactory->Release();
+	}
+
+	return S_OK;
 }
