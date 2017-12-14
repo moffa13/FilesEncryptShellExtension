@@ -87,10 +87,16 @@ HRESULT FilesEncryptContextMenuHandler::InvokeCommand(CMINVOKECOMMANDINFO *pici)
 	ss << (m_idCmd == 0 ? L"encrypt" : L"decrypt") << L" ";
 
 	for (std::vector<std::wstring>::iterator it = m_selectedFiles.begin(); it != m_selectedFiles.end(); ++it) {
-		ss << *it << L" ";
+		ss << "\"";
+		ss.write(it->c_str(), it->size() - 1);
+		ss << L"\" ";
 	}
 
-	ShellExecute(NULL, L"open", exe.c_str(), ss.str().substr(0, ss.str().size() - 1).c_str() , NULL, SW_SHOWNA);
+	std::wstring args = ss.str();
+
+	args = args.substr(0, args.size() - 1);
+
+	ShellExecute(NULL, L"open", exe.c_str(), args.c_str(), NULL, SW_SHOWNA);
 	return S_OK;
 }
 
