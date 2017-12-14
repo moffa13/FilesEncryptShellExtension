@@ -8,6 +8,7 @@ extern UINT g_dllCount;
 class FilesEncryptContextMenuHandler : public IShellExtInit, IContextMenu, IUnknown {
 private:
 	std::vector<std::wstring> m_selectedFiles;
+	UINT_PTR m_idCmd;
 protected:
 	DWORD _objRefCount;
 	~FilesEncryptContextMenuHandler();

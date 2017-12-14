@@ -9,7 +9,7 @@
 #define ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_NO_CLOSE_REG(x) if(x != ERROR_SUCCESS) {return E_UNEXPECTED;}
 #define ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_CLOSE_REG(x) if(x != ERROR_SUCCESS) {RegCloseKey(hKey); return E_UNEXPECTED;}
 
-static HANDLE g_hInstance;
+HANDLE g_hInstance;
 UINT g_dllCount = 0;
 static const std::wstring dllName = L"FilesEncrypt";
 
