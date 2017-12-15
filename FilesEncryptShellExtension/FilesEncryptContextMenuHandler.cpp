@@ -77,6 +77,7 @@ HRESULT FilesEncryptContextMenuHandler::QueryContextMenu(HMENU hmenu, UINT index
 }
 
 HRESULT FilesEncryptContextMenuHandler::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
+
 	wchar_t filename[MAX_PATH] = {0};
 	GetModuleFileName((HMODULE)g_hInstance, filename, MAX_PATH);
 	std::wstring str = filename;
@@ -84,7 +85,7 @@ HRESULT FilesEncryptContextMenuHandler::InvokeCommand(CMINVOKECOMMANDINFO *pici)
 
 	std::basic_stringstream<wchar_t> ss;
 
-	ss << (m_idCmd == 0 ? L"encrypt" : L"decrypt") << L" ";
+	ss << (LOWORD(pici->lpVerb) ? L"decrypt" : L"encrypt") << L" ";
 
 	for (std::vector<std::wstring>::iterator it = m_selectedFiles.begin(); it != m_selectedFiles.end(); ++it) {
 		ss << "\"";
@@ -96,12 +97,11 @@ HRESULT FilesEncryptContextMenuHandler::InvokeCommand(CMINVOKECOMMANDINFO *pici)
 
 	args = args.substr(0, args.size() - 1);
 
-	ShellExecute(NULL, L"open", exe.c_str(), args.c_str(), NULL, SW_SHOWNA);
+	ShellExecute(NULL, L"open", exe.c_str(), args.c_str(), NULL, SW_SHOWDEFAULT);
 	return S_OK;
 }
 
 HRESULT FilesEncryptContextMenuHandler::GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pReserved, CHAR *pszName, UINT cchMax) {
-	m_idCmd = idCmd;
 	return S_OK;
 }
 
