@@ -130,9 +130,20 @@ HRESULT FilesEncryptContextMenuHandler::QueryContextMenu(HMENU hmenu, UINT index
 }
 
 HRESULT FilesEncryptContextMenuHandler::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
+	CMINVOKECOMMANDINFOEX* cmd = (CMINVOKECOMMANDINFOEX*)pici;
 
 	std::wstring exe = getFilesEncryptExecutable();
-	std::wstring args = std::wstring{ (LOWORD(pici->lpVerb) == CMD_DECRYPT ? L"decrypt" : L"encrypt") } +L" " + getFilesAsString();
+
+	WORD verb;
+
+	if (!HIWORD(cmd->lpVerbW)) { // If verb is int
+		verb = LOWORD(pici->lpVerb);
+		if (verb != CMD_DECRYPT && verb != CMD_ENCRYPT) return E_FAIL;
+	} else {
+		return E_FAIL;
+	}
+
+	std::wstring args = std::wstring{ (verb == CMD_DECRYPT ? L"decrypt" : L"encrypt") } +L" " + getFilesAsString();
 
 	ShellExecute(NULL, L"open", exe.c_str(), args.c_str(), NULL, SW_SHOWDEFAULT);
 	return S_OK;
