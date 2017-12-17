@@ -5,9 +5,21 @@
 
 extern UINT g_dllCount;
 
+enum CMDS {
+	CMD_FIRST = 0,
+	CMD_ENCRYPT = CMD_FIRST,
+	CMD_DECRYPT,
+	CMD_LAST
+};
+
 class FilesEncryptContextMenuHandler : public IShellExtInit, IContextMenu, IUnknown {
 private:
-	std::vector<std::wstring> m_selectedFiles;
+	std::vector<std::wstring> _selectedFiles;
+	UINT _decryptId = 0;
+	UINT _encryptId = 0;
+	DWORD filesState();
+	std::wstring getFilesEncryptExecutable();
+	std::wstring getFilesAsString();
 protected:
 	DWORD _objRefCount;
 	~FilesEncryptContextMenuHandler();

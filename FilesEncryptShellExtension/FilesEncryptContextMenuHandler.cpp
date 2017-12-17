@@ -27,7 +27,7 @@ HRESULT FilesEncryptContextMenuHandler::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
 			// Determine how many files are involved in this operation.
 			UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
 			if (nFiles != 0) {
-				m_selectedFiles.clear();
+				_selectedFiles.clear();
 
 				//Enumerates the selected files and directories.
 				for (UINT i = 0; i < nFiles; i++) {
@@ -38,7 +38,7 @@ HRESULT FilesEncryptContextMenuHandler::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
 					if (DragQueryFile(hDrop, i, &str[0], size) == 0)
 						continue;
 
-					m_selectedFiles.push_back(str);
+					_selectedFiles.push_back(str);
 				}
 				hr = S_OK;
 			}
@@ -52,50 +52,87 @@ HRESULT FilesEncryptContextMenuHandler::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
 	return hr;
 }
 
-HRESULT FilesEncryptContextMenuHandler::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) {
+DWORD FilesEncryptContextMenuHandler::filesState(){
+	std::wstring exe = getFilesEncryptExecutable();
+	
+	std::wstring params = L"getState " + getFilesAsString();
 
-	if (uFlags & CMF_DEFAULTONLY)
-		return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 0);
+	SHELLEXECUTEINFO infos = { 0 };
+	infos.cbSize = sizeof(SHELLEXECUTEINFO);
+	infos.fMask = SEE_MASK_NOCLOSEPROCESS;
+	infos.hwnd = NULL;
+	infos.lpVerb = NULL;
+	infos.lpFile = exe.c_str();
+	infos.lpParameters = params.c_str();
+	infos.nShow = SW_HIDE;
+	infos.hInstApp = NULL;
 
+	ShellExecuteEx(&infos);
+	WaitForSingleObject(infos.hProcess, INFINITE);
 
-	MENUITEMINFO encryptItem;
-	encryptItem.cbSize = sizeof(MENUITEMINFO);
-	encryptItem.fMask = MIIM_STRING | MIIM_ID;
-	encryptItem.dwTypeData = L"Crypter avec FilesEncrypt";
-	encryptItem.wID = idCmdFirst;
-
-	MENUITEMINFO decryptItem;
-	decryptItem.cbSize = sizeof(MENUITEMINFO);
-	decryptItem.fMask = MIIM_STRING | MIIM_ID;
-	decryptItem.dwTypeData = L"Décrypter avec FilesEncrypt";
-	decryptItem.wID = idCmdFirst + 1;
-
-	InsertMenuItem(hmenu, indexMenu, TRUE, &encryptItem);
-	InsertMenuItem(hmenu, indexMenu + 1, TRUE, &decryptItem);
-
-	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, decryptItem.wID - idCmdFirst + 1);
+	DWORD code;
+	GetExitCodeProcess(infos.hProcess, &code);
+	return code;
 }
 
-HRESULT FilesEncryptContextMenuHandler::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
-
-	wchar_t filename[MAX_PATH] = {0};
+std::wstring FilesEncryptContextMenuHandler::getFilesEncryptExecutable() {
+	wchar_t filename[MAX_PATH] = { 0 };
 	GetModuleFileName((HMODULE)g_hInstance, filename, MAX_PATH);
 	std::wstring str = filename;
 	std::wstring exe = str.substr(0, str.find_last_of('\\')) + L"\\FilesEncrypt.exe";
+	return exe;
+}
 
+std::wstring FilesEncryptContextMenuHandler::getFilesAsString() {
 	std::basic_stringstream<wchar_t> ss;
 
-	ss << (LOWORD(pici->lpVerb) ? L"decrypt" : L"encrypt") << L" ";
-
-	for (std::vector<std::wstring>::iterator it = m_selectedFiles.begin(); it != m_selectedFiles.end(); ++it) {
+	for (std::vector<std::wstring>::iterator it = _selectedFiles.begin(); it != _selectedFiles.end(); ++it) {
 		ss << "\"";
 		ss.write(it->c_str(), it->size() - 1);
 		ss << L"\" ";
 	}
 
 	std::wstring args = ss.str();
-
 	args = args.substr(0, args.size() - 1);
+	return args;
+}
+
+HRESULT FilesEncryptContextMenuHandler::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) {
+
+	if (uFlags & CMF_DEFAULTONLY)
+		return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 0);
+
+	DWORD filesState = this->filesState();
+
+	UINT index = indexMenu;
+
+	if (filesState == 1 || filesState == 3) {
+		MENUITEMINFO encryptItem;
+		encryptItem.cbSize = sizeof(MENUITEMINFO);
+		encryptItem.fMask = MIIM_STRING | MIIM_ID;
+		encryptItem.dwTypeData = L"Crypter avec FilesEncrypt";
+		encryptItem.wID = idCmdFirst + CMD_ENCRYPT;
+		_encryptId = encryptItem.wID;
+		InsertMenuItem(hmenu, index++, TRUE, &encryptItem);
+	}
+	
+	if (filesState == 2 || filesState == 3) {
+		MENUITEMINFO decryptItem;
+		decryptItem.cbSize = sizeof(MENUITEMINFO);
+		decryptItem.fMask = MIIM_STRING | MIIM_ID;
+		decryptItem.dwTypeData = L"Décrypter avec FilesEncrypt";
+		decryptItem.wID = idCmdFirst + CMD_DECRYPT;
+		_decryptId = decryptItem.wID;
+		InsertMenuItem(hmenu, index++, TRUE, &decryptItem);
+	}
+		
+	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, CMD_LAST);
+}
+
+HRESULT FilesEncryptContextMenuHandler::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
+
+	std::wstring exe = getFilesEncryptExecutable();
+	std::wstring args = std::wstring{ (LOWORD(pici->lpVerb) == CMD_DECRYPT ? L"decrypt" : L"encrypt") } +L" " + getFilesAsString();
 
 	ShellExecute(NULL, L"open", exe.c_str(), args.c_str(), NULL, SW_SHOWDEFAULT);
 	return S_OK;
