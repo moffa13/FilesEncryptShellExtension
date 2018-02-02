@@ -3,13 +3,12 @@
 #include <string>
 #include <sstream>
 #include "FilesEncryptClassFactory.h"
-
 #include "GUID.h"
 
 #define ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_NO_CLOSE_REG(x) if(x != ERROR_SUCCESS) {return E_UNEXPECTED;}
 #define ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_CLOSE_REG(x) if(x != ERROR_SUCCESS) {RegCloseKey(hKey); return E_UNEXPECTED;}
 
-HANDLE g_hInstance;
+HINSTANCE g_hInstance;
 UINT g_dllCount = 0;
 static const std::wstring dllName = L"FilesEncrypt";
 
@@ -80,6 +79,14 @@ HRESULT WINAPI DllRegisterServer() {
 
 	RegCloseKey(hKey);
 
+	res = RegCreateKeyEx(HKEY_CURRENT_USER, (L"SOFTWARE\\Classes\\Directory\\shellex\\ContextMenuHandlers\\" + dllName).c_str(), NULL, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+	ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_CLOSE_REG(res);
+
+	res = RegSetKeyValue(hKey, NULL, NULL, REG_SZ, clsid.c_str(), GetStringSizeBytes(clsid));
+	ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_CLOSE_REG(res);
+
+	RegCloseKey(hKey);
+
 	res = RegCreateKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved", NULL, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
 	ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_CLOSE_REG(res);
 	res = RegSetKeyValue(hKey, NULL, clsid.c_str(), REG_SZ, dllName.c_str(), GetStringSizeBytes(dllName));
@@ -96,7 +103,8 @@ HRESULT WINAPI DllUnregisterServer() {
 	std::wstring clsidPath = GetCLSIDPath();
 	LONG res = RegDeleteTree(HKEY_CURRENT_USER, clsidPath.c_str());
 	//ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_NO_CLOSE_REG(res);
-	res = RegDeleteKey(HKEY_CURRENT_USER, (L"SOFTWARE\\Classes\\*\\ShellEx\\ContextMenuHandlers\\" + dllName).c_str());
+	res = RegDeleteKey(HKEY_CURRENT_USER, (L"SOFTWARE\\Classes\\*\\shellex\\ContextMenuHandlers\\" + dllName).c_str());
+	res = RegDeleteKey(HKEY_CURRENT_USER, (L"SOFTWARE\\Classes\\Directory\\shellex\\ContextMenuHandlers\\" + dllName).c_str());
 	//ERROR_SUCCESS_OR_RETURN_E_UNEXPECTED_NO_CLOSE_REG(res);
 	HKEY hKey;
 	RegOpenCurrentUser(KEY_ALL_ACCESS, &hKey);

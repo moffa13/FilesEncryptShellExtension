@@ -12,7 +12,6 @@ FilesEncryptClassFactory::FilesEncryptClassFactory() : _objRefCount(1) {
 
 HRESULT FilesEncryptClassFactory::QueryInterface(REFIID riid, void **ppvObject) {
 	if (!ppvObject) return E_POINTER;
-	*ppvObject = NULL;
 	if (IsEqualIID(riid, IID_IUnknown)) {
 		*ppvObject = this;
 		AddRef();
@@ -22,6 +21,7 @@ HRESULT FilesEncryptClassFactory::QueryInterface(REFIID riid, void **ppvObject) 
 		AddRef();
 		return S_OK;
 	} else {
+		*ppvObject = NULL;
 		return E_NOINTERFACE;
 	}
 }
@@ -49,6 +49,7 @@ HRESULT FilesEncryptClassFactory::CreateInstance(IUnknown *pUnkOuter, REFIID rii
 		hr = pHandler->QueryInterface(riid, ppvObject);
 		pHandler->Release();
 	} else {
+		*ppvObject = NULL;
 		hr = E_NOINTERFACE;
 	}
 	return hr;

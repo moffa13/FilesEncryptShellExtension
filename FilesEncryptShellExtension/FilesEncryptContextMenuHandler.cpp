@@ -1,7 +1,7 @@
 #include "FilesEncryptContextMenuHandler.h"
 #include <sstream>
 
-extern HANDLE g_hInstance;
+extern HINSTANCE g_hInstance;
 
 FilesEncryptContextMenuHandler::FilesEncryptContextMenuHandler() : _objRefCount(1) {
 	InterlockedIncrement(&g_dllCount);
